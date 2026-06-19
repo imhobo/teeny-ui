@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>teeny — URL shortener</title>
+  <link rel="stylesheet" href="/src/style.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔗</text></svg>" />
+</head>
+<body>
+  <button id="theme-toggle" aria-label="Toggle dark mode">🌙</button>
+
+  <main>
+    <div class="card">
+      <h1>teeny</h1>
+      <p class="subtitle">URL shortener</p>
+
+      <form id="shorten-form">
+        <div class="field">
+          <label for="url-input">URL to shorten</label>
+          <input
+            type="url"
+            id="url-input"
+            placeholder="https://example.com/very/long/url"
+            required
+            autofocus
+          />
+        </div>
+
+        <div class="field optional-field">
+          <button type="button" id="toggle-custom" class="link-btn">+ Custom key (optional)</button>
+          <div id="custom-key-wrapper" class="hidden">
+            <label for="custom-key-input">Custom key</label>
+            <input
+              type="text"
+              id="custom-key-input"
+              placeholder="my-custom-slug"
+            />
+          </div>
+        </div>
+
+        <button type="submit" id="submit-btn">
+          <span id="submit-text">Shorten</span>
+          <span id="submit-spinner" class="hidden">
+            <svg class="spinner" viewBox="0 0 50 50" width="20" height="20">
+              <circle cx="25" cy="25" r="20" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-dasharray="90,150"/>
+            </svg>
+          </span>
+        </button>
+      </form>
+
+      <div id="result" class="hidden">
+        <div class="result-card">
+          <p class="result-label">Your shortened URL</p>
+          <div class="result-row">
+            <a id="result-link" href="#" target="_blank" rel="noopener"></a>
+            <button id="copy-btn" class="icon-btn" aria-label="Copy to clipboard" title="Copy to clipboard">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div id="error" class="hidden">
+        <p id="error-text"></p>
+      </div>
+    </div>
+  </main>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
