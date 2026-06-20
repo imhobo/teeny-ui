@@ -447,6 +447,53 @@ body.dark .result-row a {
   font-weight: 500;
 }
 
+/* Redirect view */
+#redirect-view {
+  margin-top: 24px;
+}
+
+.redirect-status {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  color: var(--text-secondary);
+  font-size: 14px;
+  padding: 24px 0;
+  animation: fadeSlideUp 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.redirect-status .spinner {
+  width: 28px;
+  height: 28px;
+}
+
+#redirect-error {
+  margin-top: 4px;
+  padding: 12px 14px;
+  background: var(--error-bg);
+  border: 1px solid var(--error-border);
+  border-radius: var(--radius-sm);
+  animation: fadeSlideUp 0.3s ease;
+}
+
+#redirect-error-text {
+  color: var(--error);
+  font-size: 14px;
+  font-weight: 500;
+  text-align: center;
+}
+
+#redirect-error-text a {
+  color: var(--error);
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+#redirect-error-text a:hover {
+  opacity: 0.8;
+}
+
 /* Animations */
 @keyframes fadeSlideUp {
   from {

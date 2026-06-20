@@ -1,4 +1,5 @@
 const API_URL = 'https://api.teeny.babymonks.com/teeny/create';
+const RESOLVE_URL = 'https://api.teeny.babymonks.com/teeny';
 const BASE_URL = 'https://teeny.babymonks.com';
 
 const form = document.getElementById('shorten-form');
@@ -21,114 +22,150 @@ requestAnimationFrame(() => {
   document.querySelector('.card')?.classList.add('visible');
 });
 
-function setLoading(loading) {
-  submitBtn.disabled = loading;
-  submitText.classList.toggle('hidden', loading);
-  submitSpinner.classList.toggle('hidden', !loading);
-}
+// Routing — resolve short URL if path is not root
+const path = window.location.pathname.replace(/\/$/, '') || '/';
 
-function showResult(url) {
-  resultLink.textContent = url;
-  resultLink.href = url;
-  resultEl.classList.remove('hidden');
-  copyBtn.classList.remove('copied');
-  copyBtn.innerHTML = `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`;
-  errorEl.classList.add('hidden');
-}
+if (path !== '/') {
+  const key = path.startsWith('/') ? path.slice(1) : path;
+  const form = document.getElementById('shorten-form');
+  const redirectView = document.getElementById('redirect-view');
+  const redirectLoading = document.getElementById('redirect-loading');
+  const redirectError = document.getElementById('redirect-error');
+  const redirectErrorText = document.getElementById('redirect-error-text');
 
-function showError(msg) {
-  errorText.textContent = msg;
-  errorEl.classList.remove('hidden');
-  resultEl.classList.add('hidden');
-}
+  form.classList.add('hidden');
+  redirectView.classList.remove('hidden');
+  redirectLoading.classList.remove('hidden');
+  redirectError.classList.add('hidden');
 
-function hideAllResults() {
-  resultEl.classList.add('hidden');
-  errorEl.classList.add('hidden');
-}
-
-toggleCustom.addEventListener('click', () => {
-  const hidden = customKeyWrapper.classList.toggle('hidden');
-  toggleCustom.textContent = hidden ? '+ Custom key (optional)' : '- Custom key (optional)';
-  if (!hidden) customKeyInput.focus();
-});
-
-form.addEventListener('submit', async (e) => {
-  e.preventDefault();
-  hideAllResults();
-
-  const url = urlInput.value.trim();
-  if (!url) return;
-
-  const customKey = customKeyInput.value.trim();
-  setLoading(true);
-
-  try {
-    const res = await fetch(API_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url, customKey }),
-    });
-
-    if (!res.ok) {
-      const data = await res.json().catch(() => null);
-      showError(data?.message || data?.error || `Request failed (${res.status})`);
-      return;
+  (async () => {
+    try {
+      const res = await fetch(`${RESOLVE_URL}/${key}`);
+      if (res.status === 204 || !res.ok) {
+        throw new Error('Not found');
+      }
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+        return;
+      }
+      throw new Error('Not found');
+    } catch {
+      redirectLoading.classList.add('hidden');
+      redirectError.classList.remove('hidden');
+      redirectErrorText.innerHTML = 'Short URL not found. <a href="/">Create one</a>';
     }
+  })();
+} else {
+  function setLoading(loading) {
+    submitBtn.disabled = loading;
+    submitText.classList.toggle('hidden', loading);
+    submitSpinner.classList.toggle('hidden', !loading);
+  }
 
-    const data = await res.json();
-    const teenyUrl = data.teenyUrl || data.shortUrl || data.url || data.key;
-    if (!teenyUrl) {
-      showError('Unexpected response format. Please try again.');
-      return;
+  function showResult(url) {
+    resultLink.textContent = url;
+    resultLink.href = url;
+    resultEl.classList.remove('hidden');
+    copyBtn.classList.remove('copied');
+    copyBtn.innerHTML = `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`;
+    errorEl.classList.add('hidden');
+  }
+
+  function showError(msg) {
+    errorText.textContent = msg;
+    errorEl.classList.remove('hidden');
+    resultEl.classList.add('hidden');
+  }
+
+  function hideAllResults() {
+    resultEl.classList.add('hidden');
+    errorEl.classList.add('hidden');
+  }
+
+  toggleCustom.addEventListener('click', () => {
+    const hidden = customKeyWrapper.classList.toggle('hidden');
+    toggleCustom.textContent = hidden ? '+ Custom key (optional)' : '- Custom key (optional)';
+    if (!hidden) customKeyInput.focus();
+  });
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    hideAllResults();
+
+    const url = urlInput.value.trim();
+    if (!url) return;
+
+    const customKey = customKeyInput.value.trim();
+    setLoading(true);
+
+    try {
+      const res = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url, customKey }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        showError(data?.message || data?.error || `Request failed (${res.status})`);
+        return;
+      }
+
+      const data = await res.json();
+      const teenyUrl = data.teenyUrl || data.shortUrl || data.url || data.key;
+      if (!teenyUrl) {
+        showError('Unexpected response format. Please try again.');
+        return;
+      }
+
+      const shortUrl = `${BASE_URL}/${teenyUrl}`;
+      showResult(shortUrl);
+    } catch (err) {
+      showError('Network error. Check your connection and try again.');
+    } finally {
+      setLoading(false);
     }
+  });
 
-    const shortUrl = `${BASE_URL}/${teenyUrl}`;
-    showResult(shortUrl);
-  } catch (err) {
-    showError('Network error. Check your connection and try again.');
-  } finally {
-    setLoading(false);
+  async function copyToClipboard(text) {
+    try {
+      await navigator.clipboard.writeText(text);
+      copyBtn.classList.add('copied');
+      copyBtn.innerHTML = `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+      showCopyTooltip();
+      setTimeout(() => {
+        copyBtn.classList.remove('copied');
+        copyBtn.innerHTML = `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`;
+      }, 2000);
+    } catch {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.left = '-9999px';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      copyBtn.classList.add('copied');
+      showCopyTooltip();
+    }
   }
-});
 
-async function copyToClipboard(text) {
-  try {
-    await navigator.clipboard.writeText(text);
-    copyBtn.classList.add('copied');
-    copyBtn.innerHTML = `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
-    showCopyTooltip();
-    setTimeout(() => {
-      copyBtn.classList.remove('copied');
-      copyBtn.innerHTML = `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`;
-    }, 2000);
-  } catch {
-    const ta = document.createElement('textarea');
-    ta.value = text;
-    ta.style.position = 'fixed';
-    ta.style.left = '-9999px';
-    document.body.appendChild(ta);
-    ta.select();
-    document.execCommand('copy');
-    document.body.removeChild(ta);
-    copyBtn.classList.add('copied');
-    showCopyTooltip();
+  function showCopyTooltip() {
+    const existing = copyBtn.querySelector('.copy-tooltip');
+    if (existing) existing.remove();
+    const tip = document.createElement('span');
+    tip.className = 'copy-tooltip';
+    tip.textContent = 'Copied!';
+    copyBtn.appendChild(tip);
+    setTimeout(() => tip.remove(), 1500);
   }
-}
 
-function showCopyTooltip() {
-  const existing = copyBtn.querySelector('.copy-tooltip');
-  if (existing) existing.remove();
-  const tip = document.createElement('span');
-  tip.className = 'copy-tooltip';
-  tip.textContent = 'Copied!';
-  copyBtn.appendChild(tip);
-  setTimeout(() => tip.remove(), 1500);
+  copyBtn.addEventListener('click', () => {
+    copyToClipboard(resultLink.textContent);
+  });
 }
-
-copyBtn.addEventListener('click', () => {
-  copyToClipboard(resultLink.textContent);
-});
 
 function applyTheme(dark) {
   document.body.classList.toggle('dark', dark);
