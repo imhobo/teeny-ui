@@ -16,6 +16,11 @@ const errorEl = document.getElementById('error');
 const errorText = document.getElementById('error-text');
 const themeToggle = document.getElementById('theme-toggle');
 
+// Entrance animation
+requestAnimationFrame(() => {
+  document.querySelector('.card')?.classList.add('visible');
+});
+
 function setLoading(loading) {
   submitBtn.disabled = loading;
   submitText.classList.toggle('hidden', loading);
@@ -92,6 +97,7 @@ async function copyToClipboard(text) {
     await navigator.clipboard.writeText(text);
     copyBtn.classList.add('copied');
     copyBtn.innerHTML = `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+    showCopyTooltip();
     setTimeout(() => {
       copyBtn.classList.remove('copied');
       copyBtn.innerHTML = `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`;
@@ -106,7 +112,18 @@ async function copyToClipboard(text) {
     document.execCommand('copy');
     document.body.removeChild(ta);
     copyBtn.classList.add('copied');
+    showCopyTooltip();
   }
+}
+
+function showCopyTooltip() {
+  const existing = copyBtn.querySelector('.copy-tooltip');
+  if (existing) existing.remove();
+  const tip = document.createElement('span');
+  tip.className = 'copy-tooltip';
+  tip.textContent = 'Copied!';
+  copyBtn.appendChild(tip);
+  setTimeout(() => tip.remove(), 1500);
 }
 
 copyBtn.addEventListener('click', () => {
