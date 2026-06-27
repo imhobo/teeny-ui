@@ -1,0 +1,26 @@
+when:
+  event: push
+  branch: master
+
+steps:
+  - name: install
+    image: bash
+    commands:
+      - npm ci
+
+  - name: build
+    image: bash
+    commands:
+      - npm run build
+
+  - name: deploy
+    image: bash
+    commands:
+      - echo "Deploying teeny-ui to racknerd..."
+      - hermes-ssh.sh racknerd "mkdir -p /opt/babymonks/teeny-ui"
+      - hermes-ssh.sh racknerd "rm -rf /opt/babymonks/teeny-ui/*"
+      - tar czf /tmp/teeny-ui.tar.gz -C build .
+      - hermes-push.sh racknerd /tmp/teeny-ui.tar.gz /tmp/teeny-ui.tar.gz
+      - hermes-ssh.sh racknerd "tar xzf /tmp/teeny-ui.tar.gz -C /opt/babymonks/teeny-ui/ && rm /tmp/teeny-ui.tar.gz"
+      - rm -f /tmp/teeny-ui.tar.gz
+      - echo "Deployed teeny-frontend"
