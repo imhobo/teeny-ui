@@ -6,7 +6,9 @@ steps:
   - name: install
     image: bash
     commands:
-      - npm ci
+      - export HOME=/home/ubuntu
+      - rm -rf node_modules
+      - npm install --prefer-offline --no-audit --no-fund
 
   - name: build
     image: bash
